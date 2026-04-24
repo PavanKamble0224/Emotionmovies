@@ -157,7 +157,14 @@
     <h1>🎬 MoodFlick</h1>
     <p>Detect your emotion with your webcam and get personalized movie recommendations instantly!</p>
 
-    <div class="camera-section">
+<button id="start-btn" class="capture-btn" style="margin-bottom: 2rem;">🚀 Start Detection</button>
+
+        <div id="camera-section" class="camera-section" style="display: none;">
+            <div id="video-container">
+                <video id="video-feed" autoplay playsinline></video>
+                <canvas id="canvas-overlay"></canvas>
+            </div>
+            <button id="capture-btn" class="capture-btn">📸 Detect My Mood</button>
         <div id="video-container">
             <video id="video-feed" autoplay playsinline></video>
             <canvas id="canvas-overlay"></canvas>
@@ -186,6 +193,14 @@ const video = document.getElementById('video-feed');
 const canvas = document.getElementById('canvas-overlay');
 const captureBtn = document.getElementById('capture-btn');
 const resultSection = document.getElementById('result-section');
+const cameraSection = document.getElementById('camera-section');
+const startBtn = document.getElementById('start-btn');
+
+startBtn.addEventListener('click', () => {
+    startBtn.style.display = 'none';
+    cameraSection.style.display = 'block';
+    startCamera();
+});
 
 async function startCamera() {
     try {
@@ -237,7 +252,5 @@ captureBtn.addEventListener('click', async () => {
     captureBtn.disabled = false;
     captureBtn.textContent = '📸 Detect My Mood';
 });
-
-startCamera();
 </script>
 {% endblock %}
