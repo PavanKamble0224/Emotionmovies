@@ -1,0 +1,14 @@
+build:
+  publish: static files
+  commands:
+    - pip install -r requirements.txt
+
+apps:
+  - type: python
+    name: emotionmovies
+    runtime: python-3.11
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 4 --bind 0.0.0.0:$PORT
+    env:
+      - key: SECRET_KEY
+        value: emotion-movie-secret-2025-sgbau
