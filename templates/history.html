@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}History - MoodFlick{% endblock %}
+
+{% block extra_css %}
+<style>
+.history-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.history-header h1 {
+    font-size: 2rem;
+}
+
+.clear-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 65, 54, 0.2);
+    color: #FF4136;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.history-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    gap: 1.5rem;
+}
+
+.history-item-icon {
+    font-size: 2.5rem;
+}
+
+.history-item-content {
+    flex: 1;
+}
+
+.history-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.history-item-emotion {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.history-item-date {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+}
+
+.history-item-movies {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+}
+
+.history-movie-tag {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.8rem;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.stats-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+}
+
+.stats-section h2 {
+    margin-bottom: 1rem;
+}
+
+.stats-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.stat-chip {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.1);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="history-container">
+    <div class="history-header">
+        <h1>📜 Your Emotion History</h1>
+        {% if history %}
+            <a href="{{ url_for('clear_history') }}" class="clear-btn" onclick="return confirm('Clear all history?')">Clear History</a>
+        {% endif %}
+    </div>
+
+    {% if history %}
+        <div class="history-list">
+            {% for item in history %}
+                <div class="history-item">
+                    <div class="history-item-icon">{{ item.icon }}</div>
+                    <div class="history-item-content">
+                        <div class="history-item-header">
+                            <span class="history-item-emotion">{{ item.label }}</span>
+                            <span class="history-item-date">{{ item.timestamp }}</span>
+                        </div>
+                        <p style="color: rgba(255,255,255,0.6);">Confidence: {{ "%.0f"|format(item.confidence * 100) }}%</p>
+                        <div class="history-item-movies">
+                            {% for movie in item.movies %}
+                                <span class="history-movie-tag">{{ movie.title }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if stats %}
+            <div class="stats-section">
+                <h2>📊 Your Mood Profile</h2>
+                <div class="stats-grid">
+                    {% for stat in stats %}
+                        <span class="stat-chip">{{ emotion_meta[stat].icon }} {{ stat|title }}: {{ emotion_meta[stat].count }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <p style="text-align: center; color: rgba(255,255,255,0.5); padding: 3rem;">No history yet. Detect your mood to get started!</p>
+    {% endif %}
+</div>
+{% endblock %}

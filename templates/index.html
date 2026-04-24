@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}MoodFlick - Emotion Movie Recommender{% endblock %}
+
+{% block extra_css %}
+<style>
+.hero {
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+}
+
+.hero h1 {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero p {
+    font-size: 1.25rem;
+    color: rgba(255, 255, 255, 0.7);
+    max-width: 600px;
+    margin-bottom: 2rem;
+}
+
+.camera-section {
+    width: 100%;
+    max-width: 640px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 2rem;
+    backdrop-filter: blur(10px);
+}
+
+#video-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+#video-feed {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#canvas-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.capture-btn {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 50px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.capture-btn:hover {
+    transform: scale(1.02);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+}
+
+.capture-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.result-section {
+    margin-top: 2rem;
+    text-align: center;
+    display: none;
+}
+
+.result-section.active {
+    display: block;
+}
+
+.emotion-badge {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.emotion-label {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 0.5rem;
+}
+
+.emotion-tip {
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 1rem;
+}
+
+.view-movies-btn {
+    display: inline-block;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 50px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transition: transform 0.2s;
+}
+
+.view-movies-btn:hover {
+    transform: scale(1.05);
+}
+
+.emotions-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.emotion-chip {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    text-decoration: none;
+    color: white;
+    transition: all 0.2s;
+}
+
+.emotion-chip:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>🎬 MoodFlick</h1>
+    <p>Detect your emotion with your webcam and get personalized movie recommendations instantly!</p>
+
+    <div class="camera-section">
+        <div id="video-container">
+            <video id="video-feed" autoplay playsinline></video>
+            <canvas id="canvas-overlay"></canvas>
+        </div>
+        <button id="capture-btn" class="capture-btn">📸 Detect My Mood</button>
+
+        <div id="result-section" class="result-section">
+            <div id="emotion-icon" class="emotion-badge"></div>
+            <div id="emotion-label" class="emotion-label"></div>
+            <p id="emotion-tip" class="emotion-tip"></p>
+            <a id="view-movies-btn" href="#" class="view-movies-btn">View Recommended Movies</a>
+        </div>
+    </div>
+
+    <div class="emotions-grid">
+        {% for em in emotion_meta %}
+            <a href="{{ url_for('recommend', emotion=em) }}" class="emotion-chip">{{ emotion_meta[em].icon }} {{ emotion_meta[em].label }}</a>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const video = document.getElementById('video-feed');
+const canvas = document.getElementById('canvas-overlay');
+const captureBtn = document.getElementById('capture-btn');
+const resultSection = document.getElementById('result-section');
+
+async function startCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'user', width: 640, height: 480 } 
+        });
+        video.srcObject = stream;
+    } catch (err) {
+        console.error('Camera error:', err);
+        alert('Could not access camera. Please allow camera permissions.');
+    }
+}
+
+captureBtn.addEventListener('click', async () => {
+    captureBtn.disabled = true;
+    captureBtn.textContent = 'Detecting...';
+    
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = video.videoWidth;
+    tempCanvas.height = video.videoHeight;
+    const ctx = tempCanvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+    
+    const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.8);
+    
+    try {
+        const response = await fetch('/detect', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: dataUrl })
+        });
+        
+        const data = await response.json();
+        
+        if (data.emotion) {
+            document.getElementById('emotion-icon').textContent = data.icon;
+            document.getElementById('emotion-label').textContent = `${data.label} - ${Math.round(data.confidence * 100)}% confidence`;
+            document.getElementById('emotion-tip').textContent = data.tip;
+            document.getElementById('view-movies-btn').href = data.redirect_url;
+            resultSection.classList.add('active');
+        } else if (data.error) {
+            alert(data.error);
+        }
+    } catch (err) {
+        console.error('Detection error:', err);
+        alert('Error detecting emotion. Please try again.');
+    }
+    
+    captureBtn.disabled = false;
+    captureBtn.textContent = '📸 Detect My Mood';
+});
+
+startCamera();
+</script>
+{% endblock %}

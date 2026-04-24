@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Search Movies - MoodFlick{% endblock %}
+
+{% block extra_css %}
+<style>
+.search-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.search-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.search-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.search-form {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.search-input {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50px;
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    outline: none;
+    transition: all 0.3s;
+}
+
+.search-input:focus {
+    border-color: #667eea;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.search-btn {
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 50px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.search-btn:hover {
+    transform: scale(1.05);
+}
+
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.movie-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s;
+}
+
+.movie-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.movie-poster {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+}
+
+.movie-info {
+    padding: 1rem;
+}
+
+.movie-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: white;
+}
+
+.movie-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.movie-rating {
+    color: #FFD700;
+}
+
+.movie-emotion {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    margin-top: 0.5rem;
+}
+
+.no-results {
+    text-align: center;
+    padding: 3rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-container">
+    <div class="search-header">
+        <h1>🔍 Search Movies</h1>
+        <p>Search through 1000+ movies in our library</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('search') }}" class="search-form">
+        <input type="text" name="q" class="search-input" placeholder="Enter movie title..." value="{{ query }}">
+        <button type="submit" class="search-btn">Search</button>
+    </form>
+
+    {% if query %}
+        <p style="color: rgba(255,255,255,0.6); margin-bottom: 1rem;">Found {{ results|length }} results for "{{ query }}"</p>
+    {% endif %}
+
+    {% if results %}
+        <div class="results-grid">
+            {% for movie in results %}
+                <div class="movie-card">
+                    <img src="{{ movie.poster }}" alt="{{ movie.title }}" class="movie-poster" onerror="this.src='https://via.placeholder.com/200x300?text=No+Poster'">
+                    <div class="movie-info">
+                        <h3 class="movie-title">{{ movie.title }}</h3>
+                        <div class="movie-meta">
+                            <span>{{ movie.year }}</span>
+                            <span class="movie-rating">★ {{ movie.rating }}</span>
+                        </div>
+                        <span class="movie-emotion">{{ movie.icon }} {{ movie.matched_emotion|title }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% elif query %}
+        <div class="no-results">
+            <h2>No movies found</h2>
+            <p>Try a different search term</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

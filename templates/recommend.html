@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}{{ emotion_meta[emotion].label }} Movies - MoodFlick{% endblock %}
+
+{% block extra_css %}
+<style>
+.page-header {
+    text-align: center;
+    padding: 2rem;
+}
+
+.page-header h1 {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.emotion-badge {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.emotion-tip {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.movies-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 2rem;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.movie-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s;
+}
+
+.movie-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+}
+
+.movie-poster {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+}
+
+.movie-info {
+    padding: 1rem;
+}
+
+.movie-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 0.5rem;
+}
+
+.movie-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.movie-rating {
+    color: #FFD700;
+}
+
+.movie-genre {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.movie-description {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.emotion-nav {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 1rem;
+}
+
+.emotion-link {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    text-decoration: none;
+    color: white;
+    transition: all 0.2s;
+}
+
+.emotion-link:hover, .emotion-link.active {
+    background: rgba(255, 255, 255, 0.2);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <span class="emotion-badge">{{ emotion_meta[emotion].icon }}</span>
+    <h1>{{ emotion_meta[emotion].label }} Movies</h1>
+    <p class="emotion-tip">{{ emotion_meta[emotion].tip }}</p>
+</div>
+
+<div class="emotion-nav">
+    {% for em in other_emotions %}
+        <a href="{{ url_for('recommend', emotion=em) }}" class="emotion-link {% if em == emotion %}active{% endif %}">{{ emotion_meta[em].icon }} {{ em|title }}</a>
+    {% endfor %}
+</div>
+
+<div class="movies-grid">
+    {% for movie in movies %}
+        <div class="movie-card">
+            <img src="{{ movie.poster }}" alt="{{ movie.title }}" class="movie-poster" onerror="this.src='https://via.placeholder.com/200x300?text=No+Poster'">
+            <div class="movie-info">
+                <h3 class="movie-title">{{ movie.title }}</h3>
+                <div class="movie-meta">
+                    <span>{{ movie.year }}</span>
+                    <span class="movie-rating">★ {{ movie.rating }}</span>
+                </div>
+                <span class="movie-genre">{{ movie.genre }}</span>
+                <p class="movie-description">{{ movie.description }}</p>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

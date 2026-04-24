@@ -23,7 +23,7 @@ from flask import (
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from database import init_db, create_user, get_user_by_username, get_user_by_id
+from database import init_db, create_user, get_user_by_username, get_user_by_id, get_db
 from database import save_emotion_session, save_recommendations, get_user_history, get_emotion_stats
 from emotion_detector import detect_emotion
 from movies_db import get_movies_for_emotion, get_all_emotions, EMOTION_META
@@ -152,6 +152,31 @@ def api_movies(emotion):
     movies = get_movies_for_emotion(emotion, count=12)
     meta = EMOTION_META.get(emotion, EMOTION_META.get("neutral"))
     return jsonify({"emotion": emotion, "meta": meta, "movies": movies})
+
+
+@app.route("/search", methods=["GET", "POST"])
+def search():
+    """Search for movies by title."""
+    query = ""
+    results = []
+    
+    if request.method == "POST":
+        query = request.form.get("q", "").strip()
+    else:
+        query = request.args.get("q", "").strip()
+    
+    if query:
+        query_lower = query.lower()
+        for emotion in get_all_emotions():
+            movies = get_movies_for_emotion(emotion, count=1000)
+            for movie in movies:
+                title = movie.get("title", "").lower()
+                if query_lower in title:
+                    movie["matched_emotion"] = emotion
+                    movie["icon"] = EMOTION_META.get(emotion, {}).get("icon", "🎬")
+                    results.append(movie)
+    
+    return render_template("search.html", query=query, results=results, emotion_meta=EMOTION_META)
 
 
 @app.route("/history")
@@ -288,4 +313,3 @@ if __name__ == "__main__":
     print("  Database: SQLite (emotions.db)")
     print("="*55 + "\n")
     app.run(debug=True, host="0.0.0.0", port=5000)
-a
